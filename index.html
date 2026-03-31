@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAILY — GLLRY</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #FF2D2D;
+    --bg: #F5F5F5;
+    --text: #111;
+    --text-muted: #888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Roboto Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    overflow-x: hidden;
+  }
+
+  /* BIG FIXED CIRCLE */
+  .fixed-circle {
+    position: fixed;
+    width: 55vw;
+    height: 55vw;
+    max-width: 700px;
+    max-height: 700px;
+    border-radius: 50%;
+    background: var(--accent);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.92;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .header-left {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+  }
+
+  .tag {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 32px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    background: var(--bg);
+    position: sticky;
+    top: 61px;
+    z-index: 99;
+  }
+
+  .toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  button, label {
+    font-family: 'Roboto Mono', monospace;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+  }
+
+  button:hover, label:hover {
+    background: rgba(0,0,0,0.06);
+  }
+
+  button.active {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .btn-accent {
+    background: var(--accent) !important;
+    color: #fff !important;
+  }
+
+  .btn-accent:hover {
+    opacity: 0.85;
+  }
+
+  .btn-outline {
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+
+  .color-picker-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .color-picker-wrap input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  .color-picker-wrap input[type="color"]::-webkit-color-swatch {
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+  }
+
+  #file-input { display: none; }
+
+  .upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* MASONRY */
+  .masonry {
+    position: relative;
+    z-index: 1;
+    padding: 44px;
+    columns: 3;
+    column-gap: 44px;
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 44px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    position: relative;
+  }
+
+  .masonry-item:hover {
+    transform: scale(1.015);
+  }
+
+  .masonry-item img {
+    width: 100%;
+    display: block;
+  }
+
+  @media (max-width: 1100px) { .masonry { columns: 3; } }
+  @media (max-width: 750px) { .masonry { columns: 2; } }
+  @media (max-width: 450px) { .masonry { columns: 1; padding: 16px 12px; } }
+
+  /* LIGHTBOX */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    flex-direction: column;
+  }
+
+  .lightbox.open { display: flex; }
+
+  .lightbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .lightbox-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 40px;
+    overflow: hidden;
+  }
+
+  .lightbox-img-wrap {
+    position: relative;
+    max-width: 75vw;
+    max-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-img-wrap img {
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .lightbox-circle {
+    position: absolute;
+    width: 85%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--accent);
+    z-index: 1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.92;
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 16px;
+    user-select: none;
+    transition: color 0.15s;
+    z-index: 10;
+    background: none;
+    border: none;
+    font-family: 'Roboto Mono', monospace;
+  }
+
+  .lightbox-nav:hover { color: var(--text); background: none; }
+  .lightbox-nav.prev { left: 24px; }
+  .lightbox-nav.next { right: 24px; }
+
+  .lightbox-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    padding: 0;
+  }
+
+  .dot:hover { background: rgba(0,0,0,0.3); }
+  .dot.active { background: var(--accent); }
+
+  .lightbox-counter {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    gap: 16px;
+    z-index: 2;
+  }
+
+  .empty-state svg { opacity: 0.5; stroke: #fff; }
+  .empty-state span { color: #fff; }
+
+  /* PUBLISH OVERLAY */
+  .publish-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .publish-overlay.open { display: flex; }
+
+  .publish-modal {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 40px;
+    max-width: 480px;
+    width: 90%;
+  }
+
+  .publish-modal h2 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+
+  .publish-modal p {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .publish-modal input[type="text"] {
+    width: 100%;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    padding: 12px 14px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 4px;
+    background: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    outline: none;
+  }
+
+  .publish-modal input[type="text"]:focus { border-color: var(--accent); }
+
+  .publish-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .image-count {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  /* DRAG & DROP */
+  .drop-zone {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .drop-zone.active { display: flex; }
+
+  .drop-zone-inner {
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    padding: 60px 80px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<!-- BIG FIXED CIRCLE -->
+<div class="fixed-circle" id="fixed-circle"></div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">DAILY — GLLRY</div>
+  <div class="header-right">
+    <span class="tag" id="header-date"></span>
+    <span class="tag">#CT-DESIGN</span>
+  </div>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <button id="btn-grid" class="active" onclick="setView('grid')">Grid</button>
+    <button id="btn-single" onclick="setView('single')">Single</button>
+    <span class="image-count" id="image-count">0 images</span>
+  </div>
+  <div class="toolbar-right">
+    <div class="color-picker-wrap">
+      <input type="color" id="bg-color" value="#F5F5F5" title="Background color">
+    </div>
+    <div class="color-picker-wrap">
+      <input type="color" id="accent-color" value="#FF2D2D" title="Accent color">
+    </div>
+    <button class="btn-outline" onclick="shuffleImages()">Shuffle</button>
+    <label class="upload-label btn-outline" for="file-input">+ Upload</label>
+    <input type="file" id="file-input" multiple accept="image/*">
+    <button class="btn-accent" onclick="openPublish()">Publish</button>
+  </div>
+</div>
+
+<!-- MASONRY GRID -->
+<main id="grid-view">
+  <div class="masonry" id="masonry"></div>
+  <div class="empty-state" id="empty-state">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/>
+      <path d="M21 15l-5-5L5 21"/>
+    </svg>
+    <span>Drop images or click upload</span>
+  </div>
+</main>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-header">
+    <div class="header-left">DAILY — GLLRY</div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span class="lightbox-counter" id="lightbox-counter">1 / 1</span>
+      <button onclick="closeLightbox()">Close</button>
+    </div>
+  </div>
+  <div class="lightbox-body">
+    <button class="lightbox-nav prev" onclick="navImage(-1)">&lt;</button>
+    <div class="lightbox-img-wrap">
+      <div class="lightbox-circle"></div>
+      <img id="lightbox-img" src="" alt="">
+    </div>
+    <button class="lightbox-nav next" onclick="navImage(1)">&gt;</button>
+  </div>
+  <div class="lightbox-dots" id="lightbox-dots"></div>
+</div>
+
+<!-- PUBLISH OVERLAY -->
+<div class="publish-overlay" id="publish-overlay" onclick="closePublish(event)">
+  <div class="publish-modal" onclick="event.stopPropagation()">
+    <h2>Publish Gallery</h2>
+    <p>Export your gallery as a ZIP with index.html + images folder. Ready to deploy.</p>
+    <input type="text" id="gallery-title" placeholder="Gallery title" value="DAILY GLLRY #1">
+    <input type="text" id="gallery-tag" placeholder="#tag" value="#CT-DESIGN">
+    <input type="text" id="gallery-date" placeholder="Date (e.g. MAR 31 26)" value="">
+    <div class="publish-actions">
+      <button class="btn-outline" onclick="closePublish()">Cancel</button>
+      <button class="btn-accent" onclick="publishGallery()">Export ZIP</button>
+    </div>
+  </div>
+</div>
+
+<!-- DROP ZONE -->
+<div class="drop-zone" id="drop-zone">
+  <div class="drop-zone-inner">Drop images here</div>
+</div>
+
+<script>
+  let images = [];
+  let currentIndex = 0;
+  let currentView = 'grid';
+
+  // COLORS
+  const bgInput = document.getElementById('bg-color');
+  bgInput.addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--bg', e.target.value);
+  });
+
+  const accentInput = document.getElementById('accent-color');
+  accentInput.addEventListener('input', (e) => {
+    document.documentElement.style.setProperty('--accent', e.target.value);
+  });
+
+  // DATE
+  function formatDate(d) {
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    return months[d.getMonth()] + ' ' + String(d.getDate()).padStart(2,'0') + ' ' + String(d.getFullYear()).slice(-2);
+  }
+  const todayStr = formatDate(new Date());
+  document.getElementById('header-date').textContent = todayStr;
+  document.getElementById('gallery-date').value = todayStr;
+
+  // FILE UPLOAD
+  document.getElementById('file-input').addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  // DRAG & DROP
+  let dragCounter = 0;
+  document.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    document.getElementById('drop-zone').classList.add('active');
+  });
+  document.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter === 0) document.getElementById('drop-zone').classList.remove('active');
+  });
+  document.addEventListener('dragover', (e) => e.preventDefault());
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    document.getElementById('drop-zone').classList.remove('active');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  function handleFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          images.push({ src: e.target.result, w: img.width, h: img.height });
+          renderGrid();
+          updateCount();
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateCount() {
+    document.getElementById('image-count').textContent = images.length + ' image' + (images.length !== 1 ? 's' : '');
+  }
+
+  // RENDER MASONRY
+  function renderGrid() {
+    const masonry = document.getElementById('masonry');
+    const empty = document.getElementById('empty-state');
+
+    if (images.length === 0) {
+      masonry.innerHTML = '';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    empty.style.display = 'none';
+    masonry.innerHTML = '';
+
+    images.forEach((img, i) => {
+      const item = document.createElement('div');
+      item.className = 'masonry-item';
+      item.onclick = () => openLightbox(i);
+
+      const imgEl = document.createElement('img');
+      imgEl.src = img.src;
+      imgEl.alt = `Image ${i + 1}`;
+      imgEl.loading = 'lazy';
+
+      item.appendChild(imgEl);
+      masonry.appendChild(item);
+    });
+  }
+
+  // SHUFFLE
+  function shuffleImages() {
+    for (let i = images.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [images[i], images[j]] = [images[j], images[i]];
+    }
+    renderGrid();
+  }
+
+  // VIEW MODE
+  function setView(mode) {
+    currentView = mode;
+    document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+    document.getElementById('btn-single').classList.toggle('active', mode === 'single');
+    if (mode === 'grid') closeLightbox();
+    else if (mode === 'single' && images.length > 0) openLightbox(0);
+  }
+
+  // LIGHTBOX
+  function openLightbox(index) {
+    if (images.length === 0) return;
+    currentIndex = index;
+    currentView = 'single';
+    document.getElementById('btn-grid').classList.remove('active');
+    document.getElementById('btn-single').classList.add('active');
+    document.getElementById('lightbox').classList.add('open');
+    updateLightbox();
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    currentView = 'grid';
+    document.getElementById('btn-grid').classList.add('active');
+    document.getElementById('btn-single').classList.remove('active');
+  }
+
+  function updateLightbox() {
+    document.getElementById('lightbox-img').src = images[currentIndex].src;
+    document.getElementById('lightbox-counter').textContent = (currentIndex + 1) + ' / ' + images.length;
+    const dots = document.getElementById('lightbox-dots');
+    dots.innerHTML = '';
+    images.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'dot' + (i === currentIndex ? ' active' : '');
+      dot.onclick = () => { currentIndex = i; updateLightbox(); };
+      dots.appendChild(dot);
+    });
+  }
+
+  function navImage(dir) {
+    currentIndex = (currentIndex + dir + images.length) % images.length;
+    updateLightbox();
+  }
+
+  // KEYBOARD
+  document.addEventListener('keydown', (e) => {
+    if (currentView === 'single' && document.getElementById('lightbox').classList.contains('open')) {
+      if (e.key === 'ArrowRight') navImage(1);
+      if (e.key === 'ArrowLeft') navImage(-1);
+      if (e.key === 'Escape') setView('grid');
+    }
+  });
+
+  // PUBLISH
+  function openPublish() {
+    document.getElementById('publish-overlay').classList.add('open');
+  }
+
+  function closePublish(e) {
+    if (e && e.target !== document.getElementById('publish-overlay')) return;
+    document.getElementById('publish-overlay').classList.remove('open');
+  }
+
+  async function publishGallery() {
+    const title = document.getElementById('gallery-title').value || 'DAILY — GLLRY';
+    const tag = document.getElementById('gallery-tag').value || '#CT-DESIGN';
+    const accent = accentInput.value;
+    const bg = bgInput.value;
+    const date = document.getElementById('gallery-date').value || todayStr;
+
+    if (images.length === 0) { alert('No images to publish'); return; }
+
+    // Load JSZip from CDN
+    if (!window.JSZip) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      document.head.appendChild(s);
+      await new Promise(r => s.onload = r);
+    }
+
+    const zip = new JSZip();
+    const imgFolder = zip.folder('images');
+
+    // Convert dataURLs to files and build paths array
+    const imgPaths = [];
+    for (let i = 0; i < images.length; i++) {
+      const dataUrl = images[i].src;
+      const mime = dataUrl.split(';')[0].split(':')[1];
+      const ext = mime.split('/')[1].replace('jpeg','jpg');
+      const filename = `img-${String(i+1).padStart(3,'0')}.${ext}`;
+      const byteStr = atob(dataUrl.split(',')[1]);
+      const arr = new Uint8Array(byteStr.length);
+      for (let j = 0; j < byteStr.length; j++) arr[j] = byteStr.charCodeAt(j);
+      imgFolder.file(filename, arr);
+      imgPaths.push('images/' + filename);
+    }
+
+    const imgPathsJSON = JSON.stringify(imgPaths);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--accent:${accent};--bg:${bg};--text:#111;--text-muted:#888}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;text-transform:uppercase;font-size:12px;letter-spacing:.05em;overflow-x:hidden}
+.fixed-circle{position:fixed;width:55vw;height:55vw;max-width:700px;max-height:700px;border-radius:50%;background:var(--accent);top:50%;left:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:.92}
+.header{display:flex;justify-content:space-between;align-items:center;padding:24px 32px;position:sticky;top:0;background:var(--bg);z-index:100;border-bottom:1px solid rgba(0,0,0,.06)}
+.header-left{font-weight:700;font-size:13px;letter-spacing:.1em}
+.tag{color:var(--text-muted);font-size:11px}
+.toolbar{display:flex;justify-content:center;padding:16px 32px;gap:12px;border-bottom:1px solid rgba(0,0,0,.06);background:var(--bg);position:sticky;top:61px;z-index:99}
+button{font-family:'Roboto Mono',monospace;text-transform:uppercase;font-size:11px;letter-spacing:.08em;cursor:pointer;border:none;background:none;color:var(--text);padding:8px 14px;border-radius:4px;transition:all .15s}
+button:hover{background:rgba(0,0,0,.06)}
+button.active{background:var(--text);color:var(--bg)}
+.masonry{position:relative;z-index:1;padding:32px 24px;columns:4;column-gap:14px}
+.masonry-item{break-inside:avoid;margin-bottom:14px;cursor:pointer;transition:transform .2s}
+.masonry-item:hover{transform:scale(1.015)}
+.masonry-item img{width:100%;display:block}
+@media(max-width:1100px){.masonry{columns:3}}
+@media(max-width:750px){.masonry{columns:2}}
+@media(max-width:450px){.masonry{columns:1;padding:16px 12px}}
+.lightbox{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column}
+.lightbox.open{display:flex}
+.lightbox-header{display:flex;justify-content:space-between;align-items:center;padding:24px 32px;border-bottom:1px solid rgba(0,0,0,.06)}
+.lightbox-body{flex:1;display:flex;align-items:center;justify-content:center;position:relative;padding:40px;overflow:hidden}
+.lightbox-img-wrap{position:relative;max-width:75vw;max-height:75vh;display:flex;align-items:center;justify-content:center}
+.lightbox-img-wrap img{max-width:100%;max-height:75vh;object-fit:contain;border-radius:4px;position:relative;z-index:2}
+.lightbox-circle{position:absolute;width:85%;aspect-ratio:1;border-radius:50%;background:var(--accent);z-index:1;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.92}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:24px;color:var(--text-muted);cursor:pointer;padding:16px;user-select:none;z-index:10;background:none;border:none;font-family:'Roboto Mono',monospace}
+.lightbox-nav:hover{color:var(--text);background:none}
+.lightbox-nav.prev{left:24px}.lightbox-nav.next{right:24px}
+.lightbox-dots{display:flex;justify-content:center;gap:8px;padding:24px}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,.15);cursor:pointer;transition:all .2s;border:none;padding:0}
+.dot:hover{background:rgba(0,0,0,.3)}.dot.active{background:var(--accent)}
+.lightbox-counter{color:var(--text-muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="fixed-circle"></div>
+<header class="header"><div class="header-left">${title}</div><div style="display:flex;gap:16px"><span class="tag">${date}</span><span class="tag">${tag}</span></div></header>
+<div class="toolbar">
+<button id="btn-grid" class="active" onclick="setView('grid')">Grid</button>
+<button id="btn-single" onclick="setView('single')">Single</button>
+</div>
+<main><div class="masonry" id="masonry"></div></main>
+<div class="lightbox" id="lightbox">
+<div class="lightbox-header"><div style="font-weight:700;font-size:13px;letter-spacing:.1em">${title}</div><div style="display:flex;align-items:center;gap:16px"><span class="lightbox-counter" id="lightbox-counter"></span><button onclick="closeLightbox()">Close</button></div></div>
+<div class="lightbox-body"><button class="lightbox-nav prev" onclick="navImage(-1)">&lt;</button><div class="lightbox-img-wrap"><div class="lightbox-circle"></div><img id="lightbox-img" src="" alt=""></div><button class="lightbox-nav next" onclick="navImage(1)">&gt;</button></div>
+<div class="lightbox-dots" id="lightbox-dots"></div>
+</div>
+<script>
+const imagePaths=${imgPathsJSON};let currentIndex=0,currentView='grid';
+function renderGrid(){const m=document.getElementById('masonry');m.innerHTML='';imagePaths.forEach((src,i)=>{const item=document.createElement('div');item.className='masonry-item';item.onclick=()=>openLightbox(i);const el=document.createElement('img');el.src=src;el.alt='Image '+(i+1);item.appendChild(el);m.appendChild(item)})}
+function setView(mode){currentView=mode;document.getElementById('btn-grid').classList.toggle('active',mode==='grid');document.getElementById('btn-single').classList.toggle('active',mode==='single');if(mode==='grid')closeLightbox();else if(imagePaths.length>0)openLightbox(0)}
+function openLightbox(i){currentIndex=i;currentView='single';document.getElementById('btn-grid').classList.remove('active');document.getElementById('btn-single').classList.add('active');document.getElementById('lightbox').classList.add('open');updateLightbox()}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');currentView='grid';document.getElementById('btn-grid').classList.add('active');document.getElementById('btn-single').classList.remove('active')}
+function updateLightbox(){document.getElementById('lightbox-img').src=imagePaths[currentIndex];document.getElementById('lightbox-counter').textContent=(currentIndex+1)+' / '+imagePaths.length;const d=document.getElementById('lightbox-dots');d.innerHTML='';imagePaths.forEach((_,i)=>{const dot=document.createElement('button');dot.className='dot'+(i===currentIndex?' active':'');dot.onclick=()=>{currentIndex=i;updateLightbox()};d.appendChild(dot)})}
+function navImage(dir){currentIndex=(currentIndex+dir+imagePaths.length)%imagePaths.length;updateLightbox()}
+document.addEventListener('keydown',e=>{if(currentView==='single'){if(e.key==='ArrowRight')navImage(1);if(e.key==='ArrowLeft')navImage(-1);if(e.key==='Escape')setView('grid')}});
+renderGrid();
+<\/script>
+</body></html>`;
+
+    zip.file('index.html', html);
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (title.replace(/[^a-z0-9]/gi, '-').toLowerCase()) + '.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+    closePublish();
+  }
+
+  // Init
+  renderGrid();
+  updateCount();
+</script>
+
+</body>
+</html>
